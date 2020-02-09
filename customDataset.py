@@ -30,15 +30,15 @@ class DeepFakeSmallDataset(Dataset):
         self.data = pd.read_csv(csv_file)
         self.root_dir = root_dir
         self.transform = transform
+        self.frames = frames
 
     def __len__(self):
         return len(self.data)
 
-    def read_sequences(self, path, selected_folder, use_transform, idx):
+    def read_sequence(self, path, selected_folder, use_transform, idx):
         X = []
-        labels = []
-        for i in self.frames:
-            image = Image.open(os.path.join(path, selected_folder, 'frame_{}'.format(i))) # TODO?
+        for i in range(0, self.frames):
+            image = Image.open(os.path.join(path, selected_folder, 'frame_{}.jpg'.format(i))) # TODO?
 
             if use_transform is not None:
                 image = use_transform(image)
@@ -50,8 +50,6 @@ class DeepFakeSmallDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-
         label = self.data.iloc[idx, 2]
-        images = read_sequences(self.root_dir, self.data.iloc[idx, 1], self.transform, idx)
-        
+        images = self.read_sequence(self.root_dir, self.data.iloc[idx, 1], self.transform, idx)
         return images, label
