@@ -51,7 +51,7 @@ class VGGCNN(nn.Module):
 
 
 class LSTM(nn.Module):
-    def __init__(self, CNN_embed_dim=25088, h_RNN_layers=3, h_RNN=256, h_FC_dim=128, drop_p=0.3, num_classes=2):
+    def __init__(self, CNN_embed_dim=25088, h_RNN_layers=3, h_RNN=256, h_FC_dim=128, drop_p=0.6, num_classes=2):
         super(LSTM, self).__init__()
 
         self.RNN_input_size = CNN_embed_dim
@@ -83,7 +83,7 @@ class LSTM(nn.Module):
         x = F.relu(x)
         x = F.dropout(x, p=self.drop_p, training=self.training)
         x = self.fc2(x)
-        x = F.sigmoid(x)
+        x = torch.sigmoid(x)
 
         return x
 

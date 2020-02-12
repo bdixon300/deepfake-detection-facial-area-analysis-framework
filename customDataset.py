@@ -50,6 +50,6 @@ class DeepFakeSmallDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        label = self.data.iloc[idx, 2]
-        images = self.read_sequence(self.root_dir, self.data.iloc[idx, 1], self.transform, idx)
+        label = self.data.iloc[idx, 1]
+        images = self.read_sequence(self.root_dir, self.data.iloc[idx, 0], self.transform, idx)
         return images, label
