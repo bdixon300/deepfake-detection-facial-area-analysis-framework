@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     transform = transforms.Compose([transforms.ToTensor()])
 
-    trainset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/testing_frames_mouths', csv_file='../mouth-extraction-preprocessing/testing_labels.csv', transform=transform, frames=20)
+    trainset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/training_frames_mouths', csv_file='../mouth-extraction-preprocessing/training_labels.csv', transform=transform, frames=20)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
                                             shuffle=True, num_workers=4)
 
@@ -24,14 +24,14 @@ if __name__ == '__main__':
     lstm.cuda()
     lstm.train()
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(lstm.parameters(), lr=0.01, momentum=0.9, weight_decay=0.001, nesterov=True)
+    optimizer = optim.SGD(lstm.parameters(), lr=0.001, momentum=0.9, weight_decay=0.001, nesterov=True)
     #optimizer = optim.Adam(lstm.parameters(), amsgrad=True)
 
     correct = 0
 
     #scheduler = optim.lr_scheduler_StepLR(optimizer, lr_lambda=0.00)
 
-    for epoch in range(9):  # loop over the dataset multiple times
+    for epoch in range(10):  # loop over the dataset multiple times
         running_loss = 0.0
         for i, (images, labels) in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
@@ -55,7 +55,7 @@ if __name__ == '__main__':
                 print("training accuracy for batch:{}".format((correct / 80) * 100))
                 running_loss = 0.0
                 correct = 0
-        torch.save(lstm.state_dict(), 'lstm_model_batch_4_SGD_nesterov_epoch_{}.pth'.format(epoch+1))
+        torch.save(lstm.state_dict(), 'lstm_model_batch_4_lr_0.001_dropout_7_SGD_nesterov_epoch_{}.pth'.format(epoch+1))
 
     print('Finished Training')
     torch.save(lstm.state_dict(), 'lstm_model.pth')

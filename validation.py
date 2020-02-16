@@ -22,7 +22,7 @@ if __name__ == '__main__':
     cnn.eval()
     lstm = LSTM()
     lstm.cuda()
-    lstm.load_state_dict(torch.load('lstm_model.pth'))
+    lstm.load_state_dict(torch.load('lstm_model_batch_4_lr_0.001_dropout_7_SGD_nesterov_epoch_8.pth'))
     #lstm.eval()
     criterion = nn.CrossEntropyLoss()
     correct = 0
