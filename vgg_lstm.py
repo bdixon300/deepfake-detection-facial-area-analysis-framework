@@ -51,7 +51,7 @@ class VGGCNN(nn.Module):
 
 
 class LSTM(nn.Module):
-    def __init__(self, CNN_embed_dim=25088, h_RNN_layers=3, h_RNN=256, h_FC_dim=128, drop_p=0.7, num_classes=2):
+    def __init__(self, CNN_embed_dim=25088, h_RNN_layers=3, h_RNN=256, h_FC_dim=128, drop_p=0.6, num_classes=2):
         super(LSTM, self).__init__()
 
         self.RNN_input_size = CNN_embed_dim
@@ -67,6 +67,12 @@ class LSTM(nn.Module):
             num_layers=h_RNN_layers,       
             batch_first=True,       # input & output will has batch size as 1s dimension. e.g. (batch, time_step, input_size)
         )
+
+        """self.fc1 = nn.Linear(self.h_RNN, 128)
+        self.bn1 = nn.BatchNorm1d(self.h_FC_dim, momentum=0.01)
+        self.fc2 = nn.Linear(self.h_FC_dim, 64)
+        self.bn2 = nn.BatchNorm1d(64, momentum=0.01)
+        self.fc3 = nn.Linear(64, self.num_classes)"""
 
         self.fc1 = nn.Linear(self.h_RNN, self.h_FC_dim)
         self.fc2 = nn.Linear(self.h_FC_dim, self.num_classes)
@@ -85,6 +91,15 @@ class LSTM(nn.Module):
         x = self.fc2(x)
         x = torch.sigmoid(x)
 
+        """  x = self.bn1(self.fc1(RNN_out[:, -1, :])) # Use value at last time step in sequence
+        x = F.relu(x)
+        x = F.dropout(x, p=self.drop_p, training=self.training)
+        x = self.bn2(self.fc2(x))
+        x = F.relu(x)
+        x = F.dropout(x, p=self.drop_p, training=self.training)
+        x = self.fc3(x)
+        x = torch.sigmoid(x)
+        """
         return x
 
 """
