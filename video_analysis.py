@@ -6,6 +6,7 @@ from PIL import Image
 from imutils import face_utils, resize
 import numpy as np
 from vgg_lstm import VGGCNN, LSTM
+from vgg import VGGCNN as VGGCNNClassifier
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -14,23 +15,24 @@ p = "..\mouth-extraction-preprocessing\shape_predictor_68_face_landmarks.dat"
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(p)
 
-# Trying out cnn detector for better angles
-cnn_face_detector = dlib.cnn_face_detection_model_v1('./mmod_human_face_detector.dat')
 
-
-#path = "..\..\dataset\deepfake-detection-challenge\gfhgtpmv.mp4"
-#path = '../../dataset/FaceForensicsDatasetFull/manipulated_sequences/DeepFakeDetection/c23/videos/01_02__meeting_serious__YVGY8LOK.mp4'
-path = "../../dataset/FaceForensicsDatasetMouthFilteredFull/validation/manipulated_sequences/"
+#path = "../../dataset/FaceForensicsDatasetMouthFilteredFull/validation/manipulated_sequences/"
+path = "../../dataset/FaceForensicsDatasetMouthFilteredFull/testing/original_sequences/"
+#path = "../../dataset/youtube_example/"
 # Best model setup so far
 filename = ''
 cnn = VGGCNN()
+#cnn = VGGCNNClassifier()
 cnn.cuda()
 cnn.load_state_dict(torch.load('full_data_cnnmodel_for_lstm_2.pth'), strict=False)
 cnn.eval()
 lstm = LSTM()
-lstm.load_state_dict(torch.load('full_data_cnnmodel_lstm_epoch_8.pth'))
+lstm.load_state_dict(torch.load('full_data_cnnmodel_lstm_epoch_7.pth'))
 lstm.cuda()
 lstm.eval()
+print("Evaluating cnn performance on its own at video level-val")
+real_vids = 0
+fake_vids = 0
 
 for filename in os.listdir(path):
     print("Evaluating video: {}".format(filename))
@@ -45,18 +47,12 @@ for filename in os.listdir(path):
 
     while success:
         success,image = vidcap.read()
-
-        # Only extract first 30 seconds of video
-        if not success or frame_count >= 720:
-            continue
+        if not success:
+            break
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         faces = detector(gray, 0)
-        #faces = cnn_face_detector(gray, 0)
         largest_face_size = 0
-        """if len(faces) == 0:
-            faces = cnn_face_detector(gray, 0)
-            if len(faces) == 0:
-                continue"""
+
 
         for (i, face) in enumerate(faces):
             # Make the prediction and transfom it to numpy array
@@ -83,20 +79,25 @@ for filename in os.listdir(path):
         X.append(transforms.ToTensor()(roi))
 
         if frame_count % 20 == 0:
-            # DO some evaluation here
             X = torch.stack(X, dim=0)
             X = X.unsqueeze(0)
             outputs = lstm(cnn(X.cuda()))
+            #outputs = cnn(X.cuda())
             _, predicted = torch.max(outputs.data, 1)
-            #print(predicted.item())
-            voter_tally += predicted.item()
+            #voter_tally += predicted.item()
+            voter_tally += predicted.sum()
             X = []
         frame_count += 1
+    print(frame_count)
     print("voter talley: {}".format(voter_tally))
     if voter_tally < (frame_count / 20) / 2:
+    #if voter_tally < (frame_count) / 2:
+        fake_vids += 1
         print("fake: video: {}".format(filename))
     else:
+        real_vids += 1
         print("real: video: {}".format(filename))
-        
+print("real vids: {}".format(real_vids))
+print("fake vids: {}".format(fake_vids))
 
 

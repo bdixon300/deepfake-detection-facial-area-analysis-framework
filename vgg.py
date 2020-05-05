@@ -25,7 +25,7 @@ class VGGCNN(nn.Module):
         self.bn1 = nn.BatchNorm1d(fc_hidden1, momentum=0.01)
         self.fc2 = nn.Linear(fc_hidden1, fc_hidden2)
         self.bn2 = nn.BatchNorm1d(fc_hidden2, momentum=0.01)
-        self.fc3 = nn.Linear(fc_hidden2, 2)
+        self.fc3 = nn.Linear(fc_hidden1, 2)
         
     def forward(self, x_3d):
         cnn_embed_seq = []
@@ -38,9 +38,9 @@ class VGGCNN(nn.Module):
             x = self.bn1(self.fc1(x))
             x = F.relu(x)
             x = F.dropout(x, p=self.drop_p, training=self.training)
-            x = self.bn2(self.fc2(x))
-            x = F.relu(x)
-            x = F.dropout(x, p=self.drop_p, training=self.training)
+            #x = self.bn2(self.fc2(x))
+            #x = F.relu(x)
+            #x = F.dropout(x, p=self.drop_p, training=self.training)
             x = self.fc3(x)
             x = torch.sigmoid(x)
 

@@ -14,61 +14,25 @@ if __name__ == '__main__':
     device = torch.device("cuda" if use_cuda else "cpu")   # use CPU or GPU
 
     transform = transforms.Compose([transforms.ToTensor()])
-
-    trainset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/frames_eyes_training_100_vid/', csv_file='../mouth-extraction-preprocessing/training_labels_eyes.csv', transform=transform, frames=20)
-    
-    # Split training data in half (one half for cnn, other half for lstm)
-    """indices = list(range(len(trainset)))
-    split = int(np.floor(0.5*len(trainset)))
-    random_seed=45
-    np.random.seed(random_seed)
-    np.random.shuffle(indices)
-    train_indices = indices[:split]"""
-    
-    """class_sample_count = [ 30846 / 30846, 30846 / 3648]
-    targets = []
-    i = 0
-    for _, target in trainset:
-        if i == 1000:
-            break
-        i +=1
-        if target == 1.0:
-            targets.append(class_sample_count[0] / class_sample_count[1])
-        else:
-            targets.append(class_sample_count[0] / class_sample_count[0])
-
-    samples_weights = (torch.Tensor(targets)).to(device)
-    weights = (torch.Tensor(class_sample_count)).to(device)
-    weightedSampler = WeightedRandomSampler(weights, len(samples_weights), replacement=True)
-    
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
-                                            num_workers=4, sampler=weightedSampler)"""
-    
-        
+    trainset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/frames_mouths_training_all/', csv_file='../mouth-extraction-preprocessing/training_labels_all.csv', transform=transform, frames=20)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=4, num_workers=4, shuffle=True)
-    
-        
-                                            
 
     cnn = VGGCNN()
     cnn.cuda()
-    cnn.load_state_dict(torch.load('cnn_eyes_epoch_5.pth'), strict=False)
-    #cnn.load_state_dict(torch.load('full_data_cnnmodel_for_lstm_2.pth'), strict=False)
+    cnn.load_state_dict(torch.load('full_data_cnnmodel_for_lstm_2.pth'), strict=False)
     cnn.eval()
     lstm = LSTM()
     #lstm.load_state_dict(torch.load('eye_lstm_epoch_8.pth'))
     lstm.cuda()
     lstm.train()
 
-
-    #criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([30846/30846, 30846/3648]).to(device))
-    criterion = nn.CrossEntropyLoss()
+    # Use weighted loss when data has class imbalance
+    criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor([30846/30846, 30846/3648]).to(device))
+    #criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(lstm.parameters(), lr=0.001, momentum=0.9, weight_decay=0.001, nesterov=True)
-    #optimizer = optim.Adam(lstm.parameters(), amsgrad=True)
 
     correct = 0
 
-    #scheduler = optim.lr_scheduler_StepLR(optimizer, lr_lambda=0.00)
     print("Beginning training....")
     for epoch in range(10):  # loop over the dataset multiple times
         running_loss = 0.0
@@ -100,7 +64,7 @@ if __name__ == '__main__':
                 print("training accuracy for batch:{}".format((correct / 80) * 100))
                 running_loss = 0.0
                 correct = 0
-        torch.save(lstm.state_dict(), 'eye_cnn_lstm_epoch_{}.pth'.format(epoch+1))
+        torch.save(lstm.state_dict(), 'model_epoch_{}.pth'.format(epoch+1))
 
     print('Finished Training')
     #torch.save(lstm.state_dict(), 'full_data_vgg_lstm_model.pth')

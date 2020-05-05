@@ -33,14 +33,6 @@ class VGGCNN(nn.Module):
                 x = self.vgg(x_3d[:, t, :, :, :])  # VGG
                 x = x.view(x.size(0), -1)             # flatten output of conv
 
-            # FC layers might be removed?
-            """x = self.bn1(self.fc1(x))
-            x = F.relu(x)
-            x = self.bn2(self.fc2(x))
-            x = F.relu(x)
-            x = F.dropout(x, p=self.drop_p, training=self.training)
-            x = self.fc3(x)"""
-
             cnn_embed_seq.append(x)
 
         # swap time and sample dim such that (sample dim, time dim, CNN latent dim)
@@ -51,7 +43,7 @@ class VGGCNN(nn.Module):
 
 
 class LSTM(nn.Module):
-    def __init__(self, CNN_embed_dim=25088, h_RNN_layers=3, h_RNN=256, h_FC_dim=128, drop_p=0.6, num_classes=2):
+    def __init__(self, CNN_embed_dim=25088, h_RNN_layers=3, h_RNN=256, h_FC_dim=128, drop_p=0.5, num_classes=2):
         super(LSTM, self).__init__()
 
         self.RNN_input_size = CNN_embed_dim
@@ -65,24 +57,19 @@ class LSTM(nn.Module):
             input_size=self.RNN_input_size,
             hidden_size=self.h_RNN,        
             num_layers=h_RNN_layers,       
-            batch_first=True,       # input & output will has batch size as 1s dimension. e.g. (batch, time_step, input_size)
+            batch_first=True,
         )
 
-        """self.fc1 = nn.Linear(self.h_RNN, 128)
+        self.fc1 = nn.Linear(self.h_RNN, 128)
         self.bn1 = nn.BatchNorm1d(self.h_FC_dim, momentum=0.01)
         self.fc2 = nn.Linear(self.h_FC_dim, 64)
         self.bn2 = nn.BatchNorm1d(64, momentum=0.01)
-        self.fc3 = nn.Linear(64, self.num_classes)"""
-
-        self.fc1 = nn.Linear(self.h_RNN, self.h_FC_dim)
-        self.fc2 = nn.Linear(self.h_FC_dim, self.num_classes)
+        self.fc3 = nn.Linear(64, self.num_classes)
 
     def forward(self, x_RNN):
         
         self.LSTM.flatten_parameters()
         RNN_out, (h_n, h_c) = self.LSTM(x_RNN, None)  
-        """ h_n shape (n_layers, batch, hidden_size), h_c shape (n_layers, batch, hidden_size) """ 
-        """ None represents zero initial hidden state. RNN_out has shape=(batch, time_step, output_size) """
 
         # FC layers
         x = self.fc1(RNN_out[:, -1, :])   # choose RNN_out at the last time step
@@ -91,15 +78,6 @@ class LSTM(nn.Module):
         x = self.fc2(x)
         x = torch.sigmoid(x)
 
-        """  x = self.bn1(self.fc1(RNN_out[:, -1, :])) # Use value at last time step in sequence
-        x = F.relu(x)
-        x = F.dropout(x, p=self.drop_p, training=self.training)
-        x = self.bn2(self.fc2(x))
-        x = F.relu(x)
-        x = F.dropout(x, p=self.drop_p, training=self.training)
-        x = self.fc3(x)
-        x = torch.sigmoid(x)
-        """
         return x
 
 """

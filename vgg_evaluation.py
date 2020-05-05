@@ -14,13 +14,14 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor()])
 
     #validationset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/validation_frames_mouths', csv_file='../mouth-extraction-preprocessing/validation_labels.csv', transform=transform, frames=20)
-    #validationset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/frames_mouths_validation_all', csv_file='../mouth-extraction-preprocessing/validation_labels_all.csv', transform=transform, frames=20)
-    validationset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/frames_eyes_validation_100_vid', csv_file='../mouth-extraction-preprocessing/validation_labels_eyes.csv', transform=transform, frames=20)
+    validationset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/frames_mouths_testing_all', csv_file='../mouth-extraction-preprocessing/testing_labels_all.csv', transform=transform, frames=20)
+    #validationset = DeepFakeSmallDataset(root_dir='../mouth-extraction-preprocessing/frames_eyes_validation_100_vid', csv_file='../mouth-extraction-preprocessing/validation_labels_eyes.csv', transform=transform, frames=20)
     valloader = torch.utils.data.DataLoader(validationset, batch_size=4,
                                             shuffle=True, num_workers=4)
 
     cnn = VGGCNN()
     cnn.cuda()
+    cnn.load_state_dict(torch.load('full_data_cnnmodel_for_lstm_2.pth'), strict=False)
     #cnn.load_state_dict(torch.load('cnn_eyes_epoch_5.pth'))
     cnn.eval()
     
