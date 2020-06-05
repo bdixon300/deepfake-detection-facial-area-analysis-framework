@@ -52,4 +52,5 @@ class DeepFakeSmallDataset(Dataset):
             idx = idx.tolist()
         label = self.data.iloc[idx, 1]
         images = self.read_sequence(self.root_dir, self.data.iloc[idx, 0], self.transform, idx)
-        return images, label
+        sequence_name = self.data.iloc[idx, 0]
+        return images, label, sequence_name

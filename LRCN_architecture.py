@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 
+# This is the LRCN architecture design, the CNN takes in 20 frames and outputs feature maps for 20 frames. This is
+# then fed to the lstm and fully connected layers.
+
 # 2D CNN encoder using pretrained VGG16 (input is sequence of images)
 class VGGCNN(nn.Module):
     def __init__(self, fc_hidden1=512, fc_hidden2=512, drop_p=0.3, CNN_embed_dim=25088):
@@ -15,15 +18,6 @@ class VGGCNN(nn.Module):
         vgg = models.vgg16(pretrained=True)
         modules = list(vgg.children())[:-1]      # delete the last fc layer.
         self.vgg = nn.Sequential(*modules)
-
-
-        # These layers might be removed?
-        """
-        self.fc1 = nn.Linear(vgg.fc.in_features, fc_hidden1)
-        self.bn1 = nn.BatchNorm1d(fc_hidden1, momentum=0.01)
-        self.fc2 = nn.Linear(fc_hidden1, fc_hidden2)
-        self.bn2 = nn.BatchNorm1d(fc_hidden2, momentum=0.01)
-        self.fc3 = nn.Linear(fc_hidden2, CNN_embed_dim)"""
         
     def forward(self, x_3d):
         cnn_embed_seq = []
@@ -57,7 +51,7 @@ class LSTM(nn.Module):
             input_size=self.RNN_input_size,
             hidden_size=self.h_RNN,        
             num_layers=h_RNN_layers,       
-            batch_first=True,
+            batch_first=True,       # input & output will has batch size as 1s dimension. e.g. (batch, time_step, input_size)
         )
 
         self.fc1 = nn.Linear(self.h_RNN, 128)
@@ -71,16 +65,12 @@ class LSTM(nn.Module):
         self.LSTM.flatten_parameters()
         RNN_out, (h_n, h_c) = self.LSTM(x_RNN, None)  
 
-        # FC layers
-        x = self.fc1(RNN_out[:, -1, :])   # choose RNN_out at the last time step
+        x = self.bn1(self.fc1(RNN_out[:, -1, :])) # Use value at last time step in sequence
         x = F.relu(x)
         x = F.dropout(x, p=self.drop_p, training=self.training)
-        x = self.fc2(x)
+        x = self.bn2(self.fc2(x))
+        x = F.relu(x)
+        x = F.dropout(x, p=self.drop_p, training=self.training)
+        x = self.fc3(x)
         x = torch.sigmoid(x)
-
         return x
-
-"""
-vggcnn = VGGCNN()
-lstm = LSTM()
-"""
