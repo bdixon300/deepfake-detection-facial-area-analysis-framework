@@ -30,12 +30,12 @@ if __name__ == '__main__':
     #cnnEye = VGGCNNClassifier()
     cnnEye = VGGCNN()
     cnnEye.cuda()
-    # Swap model files for different experiments
+    # Swap model files for different experiments - these model files wont work with the final architecture used as the fc layers were altered
     cnnEye.load_state_dict(torch.load('trained_models_experiments/cnn_eyes_epoch_5.pth'), strict=False)
     cnnEye.eval()
 
     lstmEye = LSTM()
-    # Swap model files for different experiments
+    # Swap model files for different experiments - these model files wont work with the final architecture used as the fc layers were altered
     lstmEye.load_state_dict(torch.load('trained_models_experiments/eye_cnn_lstm_epoch_8.pth'), strict=False)
     lstmEye.cuda()
     lstmEye.eval()
@@ -44,16 +44,19 @@ if __name__ == '__main__':
     #cnnMouth = VGGCNNClassifier()
     cnnMouth = VGGCNN()
     cnnMouth.cuda()
+    # Swap model files for different experiments - these model files wont work with the final architecture used as the fc layers were altered
     cnnMouth.load_state_dict(torch.load('trained_models_experiments/cnn_mouths_subset_data_epoch_8.pth'), strict=False)
     cnnMouth.eval()
 
     lstmMouth = LSTM()
+    # Swap model files for different experiments - these model files wont work with the final architecture used as the fc layers were altered
     lstmMouth.load_state_dict(torch.load('trained_models_experiments/combined_vgg_lstm_better_architecture_epcoh_11.pth'), strict=False)
     lstmMouth.cuda()
     lstmMouth.eval()
 
     cnnFace = VGGCNNClassifier()
     cnnFace.cuda()
+    # Swap model files for different experiments - these model files wont work with the final architecture used as the fc layers were altered
     cnnFace.load_state_dict(torch.load('trained_models_experiments/cnn_faces_epoch_6.pth'))
     cnnFace.eval()
     
